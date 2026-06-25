@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111111">
+<meta name="description" content="Generador de boletas Uber Eats para Columpio Kids">
+<title>Boleta Uber Eats – Columpio Kids</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Courier New', Courier, monospace;
+    background: #e8e8e8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 16px;
+    gap: 24px;
+  }
+
+  h1 {
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    color: #222;
+    text-align: center;
+  }
+
+  .form-panel {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .form-panel label {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .form-panel input {
+    font-family: 'Courier New', monospace;
+    font-size: 15px;
+    padding: 8px 10px;
+    border: 1.5px solid #bbb;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-panel input:focus { border-color: #111; }
+
+  button {
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 11px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.2s;
+  }
+  button:hover { background: #444; }
+
+  #ticket-wrap {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  #ticket {
+    width: 384px;
+    background: #fff;
+    color: #000;
+    padding: 18px 14px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    border: 1px solid #aaa;
+  }
+
+  #ticket .store-name {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #000;
+    margin-bottom: 2px;
+  }
+  #ticket .store-sub {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #111;
+  }
+  #ticket .line-solid { border-top: 2px solid #000; margin: 8px 0; }
+  #ticket .line-dash  { border-top: 1px dashed #000; margin: 6px 0; }
+  #ticket .section-title {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    margin: 4px 0;
+    color: #000;
+  }
+  #ticket .kv {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 1px 0;
+  }
+  #ticket .kv .k { font-weight: 700; white-space: nowrap; }
+  #ticket .kv .v { text-align: right; word-break: break-word; font-weight: 600; }
+  #ticket .msg { text-align: center; font-size: 12px; color: #111; }
+  #ticket .msg-bold {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 900;
+    color: #000;
+    letter-spacing: 1px;
+  }
+  #ticket .footer {
+    text-align: center;
+    font-size: 11px;
+    color: #000;
+    letter-spacing: 0.5px;
+  }
+
+  #btn-download { width: 384px; }
+
+  #toast {
+    display: none;
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 20px;
+    z-index: 999;
+  }
+</style>
+</head>
+<body>
+
+<h1>Boleta Uber Eats – Columpio Kids</h1>
+
+<div class="form-panel">
+  <label>
+    N° de Pedido
+    <input type="text" id="inp-order" placeholder="Ej: #12345">
+  </label>
+  <label>
+    Nombre del cliente
+    <input type="text" id="inp-name" placeholder="Ej: María González">
+  </label>
+  <button onclick="generate()">Generar boleta</button>
+</div>
+
+<div id="ticket-wrap">
+  <div id="ticket">
+    <div class="store-name">COLUMPIO KIDS</div>
+    <div class="store-sub">MALL CASACOSTANERA · SANTIAGO</div>
+    <div class="store-sub">Lun – Dom &nbsp; 10:30 – 20:00</div>
+    <div class="line-solid"></div>
+    <div class="section-title">UBER EATS</div>
+    <div class="section-title" style="font-size:12px;letter-spacing:2px;">PEDIDO</div>
+    <div class="line-solid"></div>
+    <div class="kv"><span class="k">N° Pedido</span><span class="v" id="out-order">—</span></div>
+    <div class="kv"><span class="k">Cliente</span><span class="v" id="out-name">—</span></div>
+    <div class="kv"><span class="k">Fecha</span><span class="v" id="out-date">—</span></div>
+    <div class="kv"><span class="k">Hora</span><span class="v" id="out-time">—</span></div>
+    <div class="line-dash"></div>
+    <div class="msg-bold">✓ PEDIDO LISTO</div>
+    <div class="msg">Verifica que todos los productos</div>
+    <div class="msg">estén dentro de la bolsa 🛍️</div>
+    <div class="line-dash"></div>
+    <div class="footer">¡Gracias por tu compra!</div>
+    <div class="footer">Ropa · Juguetes · Accesorios</div>
+    <div class="footer">para bebés y niños pequeños 🐣</div>
+    <div class="line-solid"></div>
+  </div>
+  <button id="btn-download" onclick="download()">⬇ Descargar JPG</button>
+</div>
+
+<div id="toast"></div>
+
+<script src="html2canvas.min.js"></script>
+<script>
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(function(){ t.style.display = 'none'; }, 3000);
+}
+
+function generate() {
+  var order = document.getElementById('inp-order').value.trim() || '—';
+  var name  = document.getElementById('inp-name').value.trim()  || '—';
+  var now   = new Date();
+  var date  = now.toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' });
+  var time  = now.toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
+
+  document.getElementById('out-order').textContent = order;
+  document.getElementById('out-name').textContent  = name;
+  document.getElementById('out-date').textContent  = date;
+  document.getElementById('out-time').textContent  = time;
+
+  var wrap = document.getElementById('ticket-wrap');
+  wrap.style.display = 'flex';
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function download() {
+  html2canvas(document.getElementById('ticket'), {
+    scale: 3,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false
+  }).then(function(canvas) {
+    var order = document.getElementById('out-order').textContent.replace(/[^a-zA-Z0-9]/g,'') || 'boleta';
+    var filename = 'boleta-' + order + '.jpg';
+    var base64 = canvas.toDataURL('image/jpeg', 0.96);
+
+    if (window.AndroidBridge) {
+      AndroidBridge.downloadImage(base64, filename);
+    } else {
+      var link = document.createElement('a');
+      link.download = filename;
+      link.href = base64;
+      link.click();
+    }
+  });
+}
+</script>
+</body>
+</html>
